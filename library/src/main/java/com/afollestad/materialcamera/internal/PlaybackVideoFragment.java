@@ -6,10 +6,16 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
+
 import com.afollestad.easyvideoplayer.EasyVideoCallback;
 import com.afollestad.easyvideoplayer.EasyVideoPlayer;
 import com.afollestad.materialcamera.R;
@@ -20,7 +26,10 @@ import com.afollestad.materialdialogs.MaterialDialog;
 public class PlaybackVideoFragment extends Fragment
     implements CameraUriInterface, EasyVideoCallback {
 
-  private EasyVideoPlayer mPlayer;
+  private CameraVideoPlayer mPlayer;
+  private ImageButton mPlayButton;
+  private Button mRetryButton;
+  private Button mUseVideoButton;
   private String mOutputUri;
   private BaseCaptureInterface mInterface;
 
@@ -88,28 +97,64 @@ public class PlaybackVideoFragment extends Fragment
   public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mPlayer = (EasyVideoPlayer) view.findViewById(R.id.playbackView);
+    setupPlayer(view);
+    setupButtons(view);
+  }
+
+  private void setupButtons(@NonNull View view) {
+    mRetryButton = view.findViewById(R.id.retryButton);
+    mUseVideoButton = view.findViewById(R.id.useVideoButton);
+    mPlayButton = view.findViewById(R.id.playButton);
+
+    setupRetryButton();
+    setupUseVideoButton();
+    setupPlayButton();
+  }
+
+  private void setupRetryButton() {
+    mRetryButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        retryVideo();
+      }
+    });
+  }
+
+  private void setupUseVideoButton() {
+    mUseVideoButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        useVideo();
+      }
+    });
+  }
+
+  private void setupPlayButton() {
+    mPlayButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        @DrawableRes int buttonRes = mPlayer.isPlaying()
+            ? R.drawable.ic_icon_preview_play
+            : R.drawable.ic_icon_preview_pause;
+        mPlayButton.setImageDrawable(ContextCompat.getDrawable(getActivity(), buttonRes));
+
+        if (mPlayer.isPlaying()) {
+          mPlayer.pause();
+        } else {
+          mPlayer.start();
+        }
+      }
+    });
+  }
+
+  private void setupPlayer(@NonNull View view) {
+    mPlayer = view.findViewById(R.id.playbackView);
     mPlayer.setCallback(this);
+    mPlayer.hideControls();
+    mPlayer.setLoop(false);
+    mPlayer.disableControls();
 
-    mPlayer.setSubmitTextRes(mInterface.labelConfirm());
-    mPlayer.setRetryTextRes(mInterface.labelRetry());
-    mPlayer.setPlayDrawableRes(mInterface.iconPlay());
-    mPlayer.setPauseDrawableRes(mInterface.iconPause());
-
-    if (getArguments().getBoolean(CameraIntentKey.ALLOW_RETRY, true))
-      mPlayer.setLeftAction(EasyVideoPlayer.LEFT_ACTION_RETRY);
-    mPlayer.setRightAction(EasyVideoPlayer.RIGHT_ACTION_SUBMIT);
-
-    mPlayer.setThemeColor(getArguments().getInt(CameraIntentKey.PRIMARY_COLOR));
     mOutputUri = getArguments().getString("output_uri");
-
-    if (mInterface.hasLengthLimit()
-        && mInterface.shouldAutoSubmit()
-        && mInterface.continueTimerInPlayback()) {
-      final long diff = mInterface.getRecordingEnd() - System.currentTimeMillis();
-      mPlayer.setBottomLabelText(String.format("-%s", CameraUtil.getDurationString(diff)));
-      startCountdownTimer();
-    }
 
     mPlayer.setSource(Uri.parse(mOutputUri));
   }
@@ -171,10 +216,16 @@ public class PlaybackVideoFragment extends Fragment
   }
 
   @Override
-  public void onCompletion(EasyVideoPlayer player) {}
+  public void onCompletion(EasyVideoPlayer player) {
+    mPlayButton.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.ic_icon_preview_play));
+  }
 
   @Override
   public void onRetry(EasyVideoPlayer player, Uri source) {
+    retryVideo();
+  }
+
+  private void retryVideo() {
     if (mInterface != null) mInterface.onRetry(mOutputUri);
   }
 

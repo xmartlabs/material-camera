@@ -15,5 +15,7 @@
     <string name="mcam_file_size_limit_reached">You\'ve reached the maximum file size!</string>
     <string name="mcam_image_preview_error_title">Image preview error</string>
     <string name="mcam_image_preview_error_message">Could not decode bitmap</string>
+    <string name="retry">retry</string>
+    <string name="use_video">use video</string>
 
 </resources>

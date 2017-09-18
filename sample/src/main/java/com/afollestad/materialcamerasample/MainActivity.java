@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             .saveDir(saveDir)
             .showPortraitWarning(true)
             .allowRetry(true)
-            .defaultToFrontFacing(true)
             .allowRetry(true)
             .autoSubmit(false)
             .labelConfirm(R.string.mcam_use_video);

@@ -81,8 +81,8 @@ public class DemoSupportFragment extends Fragment implements View.OnClickListene
         new MaterialCamera(this)
             .saveDir(saveDir)
             .showPortraitWarning(true)
-            .allowRetry(true)
-            .defaultToFrontFacing(true);
+            .showPortraitWarning(false)
+            .allowRetry(true);
 
     if (view.getId() == R.id.launchCameraStillshot)
       materialCamera.stillShot(); // launches the Camera in stillshot mode

@@ -11,18 +11,12 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.ColorStateList;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.RippleDrawable;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.content.res.AppCompatResources;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -127,13 +121,11 @@ abstract class BaseCameraFragment extends Fragment
 
     int primaryColor = getArguments().getInt(CameraIntentKey.PRIMARY_COLOR);
     if (CameraUtil.isColorDark(primaryColor)) {
-      mIconTextColor = ContextCompat.getColor(getActivity(), R.color.mcam_color_light);
+      mIconTextColor = ContextCompat.getColor(getActivity(), R.color.color_light);
       primaryColor = CameraUtil.darkenColor(primaryColor);
     } else {
-      mIconTextColor = ContextCompat.getColor(getActivity(), R.color.mcam_color_dark);
+      mIconTextColor = ContextCompat.getColor(getActivity(), R.color.dark);
     }
-    view.findViewById(R.id.controlsFrame).setBackgroundColor(primaryColor);
-    mRecordDuration.setTextColor(mIconTextColor);
 
     if (mMediaRecorder != null && mIsRecording) {
       setImageRes(mButtonVideo, mInterface.iconStop());

@@ -28,11 +28,16 @@
         <!-- Register library Activities -->
         <activity
             android:name="com.afollestad.materialcamera.CaptureActivity"
-            android:theme="@style/MaterialCamera.CaptureActivity" />
+            android:screenOrientation="portrait"
+            android:theme="@style/MaterialCamera.CaptureActivity"
+            />
         <activity
             android:name="com.afollestad.materialcamera.CaptureActivity2"
+            android:screenOrientation="portrait"
             android:theme="@style/MaterialCamera.CaptureActivity" />
-        <activity android:name=".FragmentActivity"></activity>
+
+        <activity android:name=".FragmentActivity" />
+
     </application>
 
 </manifest>

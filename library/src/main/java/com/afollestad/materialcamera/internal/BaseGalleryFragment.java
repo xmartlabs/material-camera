@@ -46,15 +46,14 @@ public abstract class BaseGalleryFragment extends Fragment
     mPrimaryColor = getArguments().getInt(CameraIntentKey.PRIMARY_COLOR);
     if (CameraUtil.isColorDark(mPrimaryColor)) {
       mPrimaryColor = CameraUtil.darkenColor(mPrimaryColor);
-      final int textColor = ContextCompat.getColor(view.getContext(), R.color.mcam_color_light);
+      final int textColor = ContextCompat.getColor(view.getContext(), R.color.color_light);
       mRetry.setTextColor(textColor);
       mConfirm.setTextColor(textColor);
     } else {
-      final int textColor = ContextCompat.getColor(view.getContext(), R.color.mcam_color_dark);
+      final int textColor = ContextCompat.getColor(view.getContext(), R.color.dark);
       mRetry.setTextColor(textColor);
       mConfirm.setTextColor(textColor);
     }
-    mControlsFrame.setBackgroundColor(mPrimaryColor);
 
     mRetry.setVisibility(
         getArguments().getBoolean(CameraIntentKey.ALLOW_RETRY, true) ? View.VISIBLE : View.GONE);

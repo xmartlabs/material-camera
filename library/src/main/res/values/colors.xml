@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="mcam_color_light">#FAFAFA</color>
-    <color name="mcam_color_dark">#424242</color>
+    <color name="black_30">#4c000000</color>
+    <color name="color_light">#FAFAFA</color>
+    <color name="dark">#424242</color>
+    <color name="white">#FFFFFF</color>
 
 </resources>
