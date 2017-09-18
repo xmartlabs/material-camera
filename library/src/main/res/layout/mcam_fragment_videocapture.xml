@@ -64,7 +64,6 @@
             android:layout_centerInParent="true"
             android:layout_gravity="center"
             android:background="@drawable/mcam_circle_selector"
-            android:padding="@dimen/mcam_content_inset_less"
             android:scaleType="fitXY"
             tools:ignore="ContentDescription"
             tools:src="@drawable/mcam_action_capture"
