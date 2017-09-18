@@ -94,15 +94,7 @@ abstract class BaseCameraFragment extends Fragment
   }
 
   protected void setImageRes(ImageView iv, @DrawableRes int res) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-        && iv.getBackground() instanceof RippleDrawable) {
-      RippleDrawable rd = (RippleDrawable) iv.getBackground();
-      rd.setColor(ColorStateList.valueOf(CameraUtil.adjustAlpha(mIconTextColor, 0.3f)));
-    }
-    Drawable d = AppCompatResources.getDrawable(iv.getContext(), res);
-    d = DrawableCompat.wrap(d.mutate());
-    DrawableCompat.setTint(d, mIconTextColor);
-    iv.setImageDrawable(d);
+    iv.setImageDrawable(ContextCompat.getDrawable(getActivity(), res));
   }
 
   @SuppressLint("SetTextI18n")

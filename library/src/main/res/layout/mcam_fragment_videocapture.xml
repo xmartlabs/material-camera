@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="?colorPrimaryDark"
+        android:background="@color/mcam_color_dark"
         android:elevation="@dimen/mcam_toolbar_elevation"
         android:paddingBottom="@dimen/mcam_content_inset_less"
         android:paddingLeft="@dimen/mcam_content_inset"
