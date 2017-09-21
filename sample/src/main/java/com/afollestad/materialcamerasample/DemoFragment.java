@@ -2,7 +2,7 @@ package com.afollestad.materialcamerasample;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -77,7 +77,7 @@ public class DemoFragment extends Fragment implements View.OnClickListener {
     MaterialCamera materialCamera =
         new MaterialCamera(this)
             .saveDir(saveDir)
-            .showPortraitWarning(true)
+            .showPortraitWarning(false)
             .allowRetry(true);
 
     if (view.getId() == R.id.launchCameraStillshot)

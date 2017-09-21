@@ -2,7 +2,7 @@ package com.afollestad.materialcamera.internal;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,7 +23,11 @@ import android.support.v7.app.AppCompatDelegate;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.afollestad.materialcamera.BasePlaybackInterface;
+import com.afollestad.materialcamera.CameraUriInterface;
 import com.afollestad.materialcamera.MaterialCamera;
+import com.afollestad.materialcamera.PlaybackVideoFragment;
 import com.afollestad.materialcamera.R;
 import com.afollestad.materialcamera.TimeLimitReachedException;
 import com.afollestad.materialcamera.util.CameraUtil;
@@ -35,7 +39,7 @@ import java.util.List;
 
 /** @author Aidan Follestad (afollestad) */
 public abstract class BaseCaptureActivity extends AppCompatActivity
-    implements BaseCaptureInterface {
+    implements BaseCaptureInterface, BasePlaybackInterface {
 
   private int mCameraPosition = CAMERA_POSITION_UNKNOWN;
   private int mFlashMode = FLASH_MODE_OFF;
@@ -187,7 +191,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
 
   @Override
   public final void onBackPressed() {
-    Fragment frag = getFragmentManager().findFragmentById(R.id.container);
+    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.container);
     if (frag != null) {
       if (frag instanceof PlaybackVideoFragment && allowRetry()) {
         onRetry(((CameraUriInterface) frag).getOutputUri());
@@ -296,7 +300,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
   }
 
   private void showInitialRecorder() {
-    getFragmentManager().beginTransaction().replace(R.id.container, createFragment()).commit();
+    getSupportFragmentManager().beginTransaction().replace(R.id.container, createFragment()).commit();
   }
 
   @Override
@@ -310,7 +314,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
       finish();
       return;
     }
-    getFragmentManager().beginTransaction().replace(R.id.container, createFragment()).commit();
+    getSupportFragmentManager().beginTransaction().replace(R.id.container, createFragment()).commit();
   }
 
   @Override
@@ -330,10 +334,8 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
         // No countdown or countdown should not continue through playback, reset timer to 0
         setRecordingStart(-1);
       }
-      Fragment frag =
-          PlaybackVideoFragment.newInstance(
-              outputUri, allowRetry(), getIntent().getIntExtra(CameraIntentKey.PRIMARY_COLOR, 0));
-      getFragmentManager().beginTransaction().replace(R.id.container, frag).commit();
+      Fragment frag = PlaybackVideoFragment.newInstance(outputUri, allowRetry());
+      getSupportFragmentManager().beginTransaction().replace(R.id.container, frag).commit();
     }
   }
 
@@ -345,7 +347,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
       Fragment frag =
           StillshotPreviewFragment.newInstance(
               outputUri, allowRetry(), getIntent().getIntExtra(CameraIntentKey.PRIMARY_COLOR, 0));
-      getFragmentManager().beginTransaction().replace(R.id.container, frag).commit();
+      getSupportFragmentManager().beginTransaction().replace(R.id.container, frag).commit();
     }
   }
 

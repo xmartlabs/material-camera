@@ -1,7 +1,6 @@
-package com.afollestad.materialcamera.internal;
+package com.afollestad.materialcamera;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,6 +8,7 @@ import android.os.Handler;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +18,9 @@ import android.widget.ImageButton;
 
 import com.afollestad.easyvideoplayer.EasyVideoCallback;
 import com.afollestad.easyvideoplayer.EasyVideoPlayer;
-import com.afollestad.materialcamera.R;
+import com.afollestad.materialcamera.internal.Action;
+import com.afollestad.materialcamera.internal.CameraIntentKey;
+import com.afollestad.materialcamera.internal.CameraVideoPlayer;
 import com.afollestad.materialcamera.util.CameraUtil;
 import com.afollestad.materialdialogs.MaterialDialog;
 
@@ -31,7 +33,9 @@ public class PlaybackVideoFragment extends Fragment
   private Button mRetryButton;
   private Button mUseVideoButton;
   private String mOutputUri;
-  private BaseCaptureInterface mInterface;
+  private boolean mAllowRetry = true;
+  private BasePlaybackInterface mInterface;
+  private PlaybackVideoFrameSelectorView mFrameSelector;
 
   private Handler mCountdownHandler;
   private final Runnable mCountdownRunnable =
@@ -54,17 +58,15 @@ public class PlaybackVideoFragment extends Fragment
   @Override
   public void onAttach(Activity activity) {
     super.onAttach(activity);
-    mInterface = (BaseCaptureInterface) activity;
+    mInterface = (BasePlaybackInterface) activity;
   }
 
-  public static PlaybackVideoFragment newInstance(
-      String outputUri, boolean allowRetry, int primaryColor) {
+  public static PlaybackVideoFragment newInstance(String outputUri, boolean allowRetry) {
     PlaybackVideoFragment fragment = new PlaybackVideoFragment();
     fragment.setRetainInstance(true);
     Bundle args = new Bundle();
     args.putString("output_uri", outputUri);
     args.putBoolean(CameraIntentKey.ALLOW_RETRY, allowRetry);
-    args.putInt(CameraIntentKey.PRIMARY_COLOR, primaryColor);
     fragment.setArguments(args);
     return fragment;
   }
@@ -105,13 +107,16 @@ public class PlaybackVideoFragment extends Fragment
     mRetryButton = view.findViewById(R.id.retryButton);
     mUseVideoButton = view.findViewById(R.id.useVideoButton);
     mPlayButton = view.findViewById(R.id.playButton);
+    mFrameSelector = view.findViewById(R.id.selectorView);
 
+    mFrameSelector.setupFrames(mOutputUri);
     setupRetryButton();
     setupUseVideoButton();
     setupPlayButton();
   }
 
   private void setupRetryButton() {
+    mRetryButton.setVisibility(mAllowRetry ? View.VISIBLE : View.GONE);
     mRetryButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -153,16 +158,17 @@ public class PlaybackVideoFragment extends Fragment
     mPlayer.hideControls();
     mPlayer.setLoop(false);
     mPlayer.disableControls();
+    mPlayer.setOnProgressChanged(new Action<Integer>() {
+      @Override
+      public void perform(Integer value) {
+        mFrameSelector.setMarkerAtTime(value);
+      }
+    });
 
     mOutputUri = getArguments().getString("output_uri");
+    mAllowRetry = getArguments().getBoolean(CameraIntentKey.ALLOW_RETRY);
 
     mPlayer.setSource(Uri.parse(mOutputUri));
-  }
-
-  private void startCountdownTimer() {
-    if (mCountdownHandler == null) mCountdownHandler = new Handler();
-    else mCountdownHandler.removeCallbacks(mCountdownRunnable);
-    mCountdownHandler.post(mCountdownRunnable);
   }
 
   @Override
