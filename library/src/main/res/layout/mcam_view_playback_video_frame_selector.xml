@@ -21,7 +21,7 @@
         tools:background="#000000"
         />
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/selectorView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -40,6 +40,20 @@
             android:visibility="invisible"
             />
 
-    </LinearLayout>
+        <View
+            android:id="@+id/startPosition"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="@color/dark"
+            />
+
+        <View
+            android:id="@+id/endPosition"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="@color/dark"
+            />
+
+    </RelativeLayout>
 
 </RelativeLayout>

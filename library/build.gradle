@@ -33,13 +33,17 @@ android {
 repositories {
     jcenter()
     maven { url "https://dl.bintray.com/drummer-aidan/maven" }
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
+    }
 }
 
 dependencies {
     compile 'com.android.support:appcompat-v7:' + versions.supportLib
     compile 'com.afollestad:easyvideoplayer:' + versions.easyVideoPlayer
     compile 'com.afollestad.material-dialogs:core:' + versions.materialDialogs
-    compile "com.github.xmartlabs:k4l-video-trimmer:2960136"
+    compile 'com.github.xmartlabs:k4l-video-trimmer:' + versions.videoTrimmer
 }
 
 apply from: 'https://raw.githubusercontent.com/afollestad/aidanfollestad.com/master/android-lib-release.gradle'

@@ -7,10 +7,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -27,8 +30,10 @@ public class PlaybackVideoFrameSelectorView extends LinearLayout {
 
   private RelativeLayout mLayout;
   private LinearLayout mFrameHolder;
-  private LinearLayout mSelectorView;
+  private RelativeLayout mSelectorView;
   private View mCurrentPositionMarker;
+  private View mStartMarker;
+  private View mEndMarker;
   private long mDuration;
 
   public PlaybackVideoFrameSelectorView(Context context, @Nullable AttributeSet attrs) {
@@ -39,6 +44,8 @@ public class PlaybackVideoFrameSelectorView extends LinearLayout {
     mFrameHolder = mLayout.findViewById(R.id.frameHolder);
     mSelectorView = mLayout.findViewById(R.id.selectorView);
     mCurrentPositionMarker = mLayout.findViewById(R.id.currentPosition);
+    mStartMarker = mLayout.findViewById(R.id.startPosition);
+    mEndMarker = mLayout.findViewById(R.id.endPosition);
   }
 
   public void setupFrames(final String filePath) {
@@ -66,6 +73,68 @@ public class PlaybackVideoFrameSelectorView extends LinearLayout {
     } catch (Exception e) {
       Log.e("ERROR_SELECTING_FRAME", e.getMessage());
     }
+  }
+
+  private boolean mIsScrolling;
+  ViewConfiguration vc = ViewConfiguration.get(getContext());
+  private int mTouchSlop = vc.getScaledTouchSlop();
+  private float startOfTouchScroll = 0f;
+  private float startXOffset = 0f;
+  private float endXOffset = 0f;
+  private boolean movingStart;
+  private boolean movingEnd;
+
+  @Override
+  public boolean onInterceptTouchEvent(MotionEvent ev) {
+    final int action = MotionEventCompat.getActionMasked(ev);
+
+    if (action == MotionEvent.ACTION_DOWN) {
+      startOfTouchScroll = ev.getX();
+      if (Math.abs(startOfTouchScroll - endXOffset) < 30) {
+        movingEnd = true;
+      } else if (Math.abs(startOfTouchScroll - startXOffset) < 30) {
+        movingStart = true;
+      }
+    }
+
+    // Always handle the case of the touch gesture being complete.
+    if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+      // Release the scroll.
+      mIsScrolling = false;
+      movingEnd = false;
+      movingStart = false;
+      return false; // Do not intercept touch event, let the child handle it
+    }
+
+    switch (action) {
+      case MotionEvent.ACTION_MOVE: {
+        // left as an exercise for the reader
+        int xDiff = (int) Math.abs(ev.getX() - startOfTouchScroll);
+
+        // Touch slop should be calculated using ViewConfiguration
+        // constants.
+        if (xDiff > mTouchSlop) {
+          // Start scrolling!
+          mIsScrolling = true;
+          if (movingStart) {
+            startXOffset = ev.getX();
+            mStartMarker.setX(startXOffset);
+            movingStart = false;
+          } else if (movingEnd){
+            endXOffset = ev.getX();
+            mEndMarker.setX(endXOffset);
+            movingEnd = false;
+          }
+
+          return true;
+        }
+        break;
+      }
+    }
+
+    // In general, we don't want to intercept touch events. They should be
+    // handled by the child view.
+    return false;
   }
 
   private long convertToMicro(long durationInMilli) {

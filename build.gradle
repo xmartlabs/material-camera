@@ -21,6 +21,10 @@ allprojects {
     buildscript {
         repositories {
             maven { url "https://plugins.gradle.org/m2/" }
+            maven {
+                url 'https://maven.google.com/'
+                name 'Google'
+            }
         }
     }
     apply plugin: "com.diffplug.gradle.spotless"
