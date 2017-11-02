@@ -1,5 +1,5 @@
 ext.versions = [
-        buildTools        : '26.0.0',
+        buildTools        : '26.0.2',
         compileSdk        : 26,
         easyVideoPlayer   : '0.3.0',
         gradlePlugin      : '2.3.2',
@@ -8,6 +8,6 @@ ext.versions = [
         publishVersion    : '0.4.4',
         publishVersionCode: 25,
         spotlessPlugin    : '3.4.0',
-        supportLib        : '25.3.1',
-        videoTrimmer      : 'c0ed083'
+        supportLib        : '26.0.2',
+        videoTrimmer      : '31e6865'
 ]
