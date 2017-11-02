@@ -39,6 +39,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:' + versions.supportLib
     compile 'com.afollestad:easyvideoplayer:' + versions.easyVideoPlayer
     compile 'com.afollestad.material-dialogs:core:' + versions.materialDialogs
+    compile "com.github.xmartlabs:k4l-video-trimmer:2960136"
 }
 
 apply from: 'https://raw.githubusercontent.com/afollestad/aidanfollestad.com/master/android-lib-release.gradle'
