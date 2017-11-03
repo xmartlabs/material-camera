@@ -84,7 +84,7 @@ public class PlaybackVideoFragment extends Fragment
 
     mVideoTrimmer = view.findViewById(R.id.timeLine);
     if (mVideoTrimmer != null) {
-      mVideoTrimmer.setMaxDuration(10);
+      mVideoTrimmer.setMaxDuration(90);
       mVideoTrimmer.setOnTrimVideoListener(this);
       mVideoTrimmer.setOnK4LVideoListener(this);
       mVideoTrimmer.setVideoURI(Uri.parse(mOutputUri));
