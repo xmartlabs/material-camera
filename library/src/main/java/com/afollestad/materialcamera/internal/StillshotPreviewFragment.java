@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
+
 import com.afollestad.materialcamera.R;
 import com.afollestad.materialcamera.util.ImageUtil;
 

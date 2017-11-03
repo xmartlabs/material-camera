@@ -3,6 +3,7 @@ package com.afollestad.materialcamera.internal;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+
 import java.util.List;
 
 /** @author Aidan Follestad (afollestad) */

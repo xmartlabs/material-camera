@@ -19,8 +19,10 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
 import com.afollestad.materialcamera.R;
 import com.afollestad.materialdialogs.MaterialDialog;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 

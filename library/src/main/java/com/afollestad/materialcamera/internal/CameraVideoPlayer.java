@@ -1,12 +1,10 @@
 package com.afollestad.materialcamera.internal;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.SeekBar;
 
 import com.afollestad.easyvideoplayer.EasyVideoPlayer;

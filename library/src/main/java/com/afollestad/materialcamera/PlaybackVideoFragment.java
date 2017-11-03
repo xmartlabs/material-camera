@@ -2,28 +2,17 @@ package com.afollestad.materialcamera;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
 
-import com.afollestad.easyvideoplayer.EasyVideoCallback;
-import com.afollestad.easyvideoplayer.EasyVideoPlayer;
-import com.afollestad.materialcamera.internal.Action;
 import com.afollestad.materialcamera.internal.CameraIntentKey;
-import com.afollestad.materialcamera.internal.CameraVideoPlayer;
-import com.afollestad.materialcamera.util.CameraUtil;
 import com.afollestad.materialdialogs.MaterialDialog;
 
 import life.knowledge4.videotrimmer.K4LVideoTrimmer;
@@ -115,7 +104,7 @@ public class PlaybackVideoFragment extends Fragment
   @Override
   public void getResult(Uri uri) {
     mProgressDialog.cancel();
-    mInterface.useMedia(mOutputUri);
+    mInterface.useMedia(uri.getPath());
   }
 
   @Override

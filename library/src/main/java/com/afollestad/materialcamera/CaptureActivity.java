@@ -1,7 +1,8 @@
 package com.afollestad.materialcamera;
 
-import android.support.v4.app.Fragment;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+
 import com.afollestad.materialcamera.internal.BaseCaptureActivity;
 import com.afollestad.materialcamera.internal.CameraFragment;
 

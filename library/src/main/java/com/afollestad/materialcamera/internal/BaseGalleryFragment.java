@@ -1,9 +1,9 @@
 package com.afollestad.materialcamera.internal;
 
 import android.app.Activity;
-import android.support.v4.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Button;

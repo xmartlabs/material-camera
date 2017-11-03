@@ -15,9 +15,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
+
 import com.afollestad.materialcamera.internal.CameraIntentKey;
 import com.afollestad.materialcamera.util.CameraUtil;
 import com.afollestad.materialdialogs.util.DialogUtils;
+
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
