@@ -22,6 +22,7 @@ import life.knowledge4.videotrimmer.interfaces.OnTrimVideoListener;
 /** @author Aidan Follestad (afollestad) */
 public class PlaybackVideoFragment extends Fragment
     implements OnTrimVideoListener, OnK4LVideoListener {
+  public static final int VIDEO_MAX_DURATION = 30;
 
   private BasePlaybackInterface mInterface;
   private String mOutputUri;
@@ -49,8 +50,9 @@ public class PlaybackVideoFragment extends Fragment
   @Override
   public void onResume() {
     super.onResume();
-    if (getActivity() != null)
+    if (getActivity() != null) {
       getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+    }
   }
 
   @Override
@@ -84,7 +86,7 @@ public class PlaybackVideoFragment extends Fragment
 
     mVideoTrimmer = view.findViewById(R.id.timeLine);
     if (mVideoTrimmer != null) {
-      mVideoTrimmer.setMaxDuration(90);
+      mVideoTrimmer.setMaxDuration(VIDEO_MAX_DURATION);
       mVideoTrimmer.setOnTrimVideoListener(this);
       mVideoTrimmer.setOnK4LVideoListener(this);
       mVideoTrimmer.setVideoURI(Uri.parse(mOutputUri));
