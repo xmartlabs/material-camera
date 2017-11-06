@@ -101,11 +101,11 @@ abstract class BaseCameraFragment extends Fragment
   public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mDelayStartCountdown = (TextView) view.findViewById(R.id.delayStartCountdown);
-    mButtonVideo = (ImageButton) view.findViewById(R.id.video);
-    mButtonStillshot = (ImageButton) view.findViewById(R.id.stillshot);
-    mRecordDuration = (TextView) view.findViewById(R.id.recordDuration);
-    mButtonFacing = (ImageButton) view.findViewById(R.id.facing);
+    mDelayStartCountdown = view.findViewById(R.id.delayStartCountdown);
+    mButtonVideo = view.findViewById(R.id.video);
+    mButtonStillshot = view.findViewById(R.id.stillshot);
+    mRecordDuration = view.findViewById(R.id.recordDuration);
+    mButtonFacing = view.findViewById(R.id.facing);
     if (mInterface.shouldHideCameraFacing() || CameraUtil.isChromium()) {
       mButtonFacing.setVisibility(View.GONE);
     } else {
@@ -249,9 +249,6 @@ abstract class BaseCameraFragment extends Fragment
         if (mInterface.getRecordingStart() == -1)
           mInterface.setRecordingStart(System.currentTimeMillis());
         startCounter();
-      } else {
-        mRecordDuration.setText(
-            String.format("%s", CameraUtil.getDurationString(mInterface.getLengthLimit())));
       }
     }
   }
