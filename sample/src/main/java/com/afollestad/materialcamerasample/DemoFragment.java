@@ -77,6 +77,7 @@ public class DemoFragment extends Fragment implements View.OnClickListener {
     MaterialCamera materialCamera =
         new MaterialCamera(this)
             .saveDir(saveDir)
+            .countdownSeconds(30f)
             .showPortraitWarning(false)
             .allowRetry(true);
 
