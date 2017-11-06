@@ -18,4 +18,5 @@
     <string name="retry">retry</string>
     <string name="use_video">use video</string>
     <string name="trimming_progress">Trimming your video…</string>
+    <string name="time_limit_exceeded">Recording time limit exceeded</string>
 </resources>

@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialcamera.CameraUriInterface;
 import com.afollestad.materialcamera.MaterialCamera;
@@ -73,9 +74,10 @@ abstract class BaseCameraFragment extends Fragment
           if (mRecordEnd != -1) {
             if (now >= mRecordEnd) {
               stopRecordingVideo(true);
+              Toast.makeText(getContext(), R.string.time_limit_exceeded, Toast.LENGTH_LONG).show();
             } else {
               final long diff = mRecordEnd - now;
-              mRecordDuration.setText(String.format("-%s", CameraUtil.getDurationString(diff)));
+              mRecordDuration.setText(String.format("%s", CameraUtil.getDurationString(diff)));
             }
           } else {
             mRecordDuration.setText(CameraUtil.getDurationString(now - mRecordStart));
@@ -249,7 +251,7 @@ abstract class BaseCameraFragment extends Fragment
         startCounter();
       } else {
         mRecordDuration.setText(
-            String.format("-%s", CameraUtil.getDurationString(mInterface.getLengthLimit())));
+            String.format("%s", CameraUtil.getDurationString(mInterface.getLengthLimit())));
       }
     }
   }
