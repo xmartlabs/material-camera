@@ -76,7 +76,7 @@ abstract class BaseCameraFragment extends Fragment
               stopRecordingVideo(true);
               Toast.makeText(getContext(), R.string.time_limit_exceeded, Toast.LENGTH_LONG).show();
             } else {
-              final long diff = now - mRecordEnd;
+              final long diff = now - mRecordStart;
               mRecordDuration.setText(String.format("%s", CameraUtil.getDurationString(diff)));
             }
           } else {
