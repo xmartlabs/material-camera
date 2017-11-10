@@ -15,8 +15,6 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
   protected final SurfaceHolder mHolder;
   private final Camera mCamera;
-  private int mRatioWidth = 0;
-  private int mRatioHeight = 0;
 
   public CameraPreview(Context context, Camera camera) {
     super(context);
@@ -68,8 +66,6 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     if (width < 0 || height < 0) {
       throw new IllegalArgumentException("Size cannot be negative.");
     }
-    mRatioWidth = width;
-    mRatioHeight = height;
     requestLayout();
   }
 }

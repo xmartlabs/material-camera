@@ -195,7 +195,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
     Fragment frag = getSupportFragmentManager().findFragmentById(R.id.container);
     if (frag != null) {
       if (frag instanceof PlaybackVideoFragment && allowRetry()) {
-        onRetry(((CameraUriInterface) frag).getOutputUri());
+        ((PlaybackVideoFragment) frag).cancelAction();
         return;
       } else if (frag instanceof BaseCameraFragment) {
         ((BaseCameraFragment) frag).cleanup();
