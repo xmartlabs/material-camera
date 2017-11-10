@@ -9,5 +9,5 @@ ext.versions = [
         publishVersionCode: 25,
         spotlessPlugin    : '3.4.0',
         supportLib        : '26.0.2',
-        videoTrimmer      : '7e44e54'
+        videoTrimmer      : 'f4c52b9'
 ]
