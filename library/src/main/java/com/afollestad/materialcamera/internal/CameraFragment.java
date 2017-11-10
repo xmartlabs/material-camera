@@ -25,7 +25,6 @@ import com.afollestad.materialcamera.util.ImageUtil;
 import com.afollestad.materialcamera.util.ManufacturerUtil;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -62,34 +61,54 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
     Camera.Size backupSize = null;
     for (Camera.Size size : choices) {
       if (size.height <= ci.videoPreferredHeight()) {
-        if (size.width == size.height * ci.videoPreferredAspect()) return size;
-        if (ci.videoPreferredHeight() >= size.height) backupSize = size;
+        if (size.width == size.height * ci.videoPreferredAspect()) {
+          return size;
+        }
+        if (ci.videoPreferredHeight() >= size.height) {
+          backupSize = size;
+        }
       }
     }
-    if (backupSize != null) return backupSize;
+    if (backupSize != null) {
+      return backupSize;
+    }
     LOG(CameraFragment.class, "Couldn't find any suitable video size");
     return choices.get(choices.size() - 1);
   }
 
-  private static Camera.Size chooseOptimalSize(
-      List<Camera.Size> choices, int width, int height, Camera.Size aspectRatio) {
-    // Collect the supported resolutions that are at least as big as the preview Surface
-    List<Camera.Size> bigEnough = new ArrayList<>();
-    int w = aspectRatio.width;
-    int h = aspectRatio.height;
-    for (Camera.Size option : choices) {
-      if (option.height == width * h / w && option.width >= width && option.height >= height) {
-        bigEnough.add(option);
+  private static Camera.Size chooseOptimalSize(List<Camera.Size> choices, int width, int height) {
+    final double ASPECT_TOLERANCE = 0.1;
+    double targetRatio = (double) width / height;
+    if (choices == null) {
+      return null;
+    }
+
+    Camera.Size optimalSize = null;
+    double minDiff = Double.MAX_VALUE;
+
+    // Try to find a size that matches aspect ratio and size
+    for (Camera.Size size : choices) {
+      double ratio = (double) size.width / size.height;
+      if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+        continue;
+      }
+      if (Math.abs(size.height - height) < minDiff) {
+        optimalSize = size;
+        minDiff = Math.abs(size.height - height);
       }
     }
 
-    // Pick the smallest of those, assuming we found any
-    if (bigEnough.size() > 0) {
-      return Collections.min(bigEnough, new CompareSizesByArea());
-    } else {
-      LOG(CameraFragment.class, "Couldn't find any suitable preview size");
-      return aspectRatio;
+    // Cannot find the one match the aspect ratio, ignore the requirement
+    if (optimalSize == null) {
+      minDiff = Double.MAX_VALUE;
+      for (Camera.Size size : choices) {
+        if (Math.abs(size.height - height) < minDiff) {
+          optimalSize = size;
+          minDiff = Math.abs(size.height - height);
+        }
+      }
     }
+    return optimalSize;
   }
 
   @Override
@@ -117,14 +136,18 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
   @Override
   public void onPause() {
-    if (mCamera != null) mCamera.lock();
+    if (mCamera != null) {
+      mCamera.lock();
+    }
     super.onPause();
   }
 
   @Override
   public void onClick(View view) {
     if (view.getId() == R.id.rootFrame) {
-      if (mCamera == null || mIsAutoFocusing) return;
+      if (mCamera == null || mIsAutoFocusing) {
+        return;
+      }
       try {
         mIsAutoFocusing = true;
         mCamera.cancelAutoFocus();
@@ -133,8 +156,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
               @Override
               public void onAutoFocus(boolean success, Camera camera) {
                 mIsAutoFocusing = false;
-                if (!success)
+                if (!success) {
                   Toast.makeText(getActivity(), "Unable to auto-focus!", Toast.LENGTH_SHORT).show();
+                }
               }
             });
       } catch (Throwable t) {
@@ -148,7 +172,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
   @Override
   public void openCamera() {
     final Activity activity = getActivity();
-    if (null == activity || activity.isFinishing()) return;
+    if (null == activity || activity.isFinishing()) {
+      return;
+    }
     try {
       final int mBackCameraId =
           mInterface.getBackCamera() != null ? (Integer) mInterface.getBackCamera() : -1;
@@ -163,7 +189,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
         for (int i = 0; i < numberOfCameras; i++) {
           //noinspection ConstantConditions
-          if (mFrontCameraId != -1 && mBackCameraId != -1) break;
+          if (mFrontCameraId != -1 && mBackCameraId != -1) {
+            break;
+          }
           Camera.CameraInfo info = new Camera.CameraInfo();
           Camera.getCameraInfo(i, info);
           if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT && mFrontCameraId == -1) {
@@ -191,9 +219,11 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
               mInterface.setCameraPosition(CAMERA_POSITION_FRONT);
             } else {
               setImageRes(mButtonFacing, mInterface.iconFrontCamera());
-              if (mInterface.getBackCamera() != null && (Integer) mInterface.getBackCamera() != -1)
+              if (mInterface.getBackCamera() != null && (Integer) mInterface.getBackCamera() != -1) {
                 mInterface.setCameraPosition(CAMERA_POSITION_BACK);
-              else mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              } else {
+                mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              }
             }
           } else {
             // Check back facing first
@@ -203,33 +233,39 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
             } else {
               setImageRes(mButtonFacing, mInterface.iconRearCamera());
               if (mInterface.getFrontCamera() != null
-                  && (Integer) mInterface.getFrontCamera() != -1)
+                  && (Integer) mInterface.getFrontCamera() != -1) {
                 mInterface.setCameraPosition(CAMERA_POSITION_FRONT);
-              else mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              } else {
+                mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              }
             }
           }
           break;
       }
 
-      if (mWindowSize == null) mWindowSize = new Point();
+      if (mWindowSize == null) {
+        mWindowSize = new Point();
+      }
       activity.getWindowManager().getDefaultDisplay().getSize(mWindowSize);
       final int toOpen = getCurrentCameraId();
       mCamera = Camera.open(toOpen == -1 ? 0 : toOpen);
       Camera.Parameters parameters = mCamera.getParameters();
       List<Camera.Size> videoSizes = parameters.getSupportedVideoSizes();
-      if (videoSizes == null || videoSizes.size() == 0)
+      if (videoSizes == null || videoSizes.size() == 0) {
         videoSizes = parameters.getSupportedPreviewSizes();
+      }
+
       mVideoSize = chooseVideoSize((BaseCaptureActivity) activity, videoSizes);
-      Camera.Size previewSize =
-          chooseOptimalSize(
-              parameters.getSupportedPreviewSizes(), mWindowSize.x, mWindowSize.y, mVideoSize);
+      Camera.Size previewSize = chooseOptimalSize(parameters.getSupportedPreviewSizes(), mWindowSize.x, mWindowSize.y);
 
       if (ManufacturerUtil.isSamsungGalaxyS3()) {
         parameters.setPreviewSize(
             ManufacturerUtil.SAMSUNG_S3_PREVIEW_WIDTH, ManufacturerUtil.SAMSUNG_S3_PREVIEW_HEIGHT);
       } else {
         parameters.setPreviewSize(previewSize.width, previewSize.height);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) parameters.setRecordingHint(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+          parameters.setRecordingHint(true);
+        }
       }
 
       Camera.Size mStillShotSize =
@@ -263,7 +299,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
         new Comparator<Camera.Size>() {
           @Override
           public int compare(Camera.Size lhs, Camera.Size rhs) {
-            if (lhs.height * lhs.width > rhs.height * rhs.width) return -1;
+            if (lhs.height * lhs.width > rhs.height * rhs.width) {
+              return -1;
+            }
             return 1;
           }
         });
@@ -297,8 +335,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       jpegOrientation = previewOrientation = mDisplayOrientation;
 
       if (Degrees.isPortrait(deviceOrientation)
-          && getCurrentCameraPosition() == CAMERA_POSITION_FRONT)
+          && getCurrentCameraPosition() == CAMERA_POSITION_FRONT) {
         previewOrientation = Degrees.mirror(mDisplayOrientation);
+      }
     }
 
     parameters.setRotation(jpegOrientation);
@@ -307,12 +346,17 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
   private void createPreview() {
     Activity activity = getActivity();
-    if (activity == null) return;
-    if (mWindowSize == null) mWindowSize = new Point();
+    if (activity == null) {
+      return;
+    }
+    if (mWindowSize == null) {
+      mWindowSize = new Point();
+    }
     activity.getWindowManager().getDefaultDisplay().getSize(mWindowSize);
     mPreviewView = new CameraPreview(getActivity(), mCamera);
-    if (mPreviewFrame.getChildCount() > 0 && mPreviewFrame.getChildAt(0) instanceof CameraPreview)
+    if (mPreviewFrame.getChildCount() > 0 && mPreviewFrame.getChildAt(0) instanceof CameraPreview) {
       mPreviewFrame.removeViewAt(0);
+    }
     mPreviewFrame.addView(mPreviewView, 0);
     mPreviewView.setAspectRatio(mWindowSize.x, mWindowSize.y);
   }
@@ -336,7 +380,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
   private boolean prepareMediaRecorder() {
     try {
       final Activity activity = getActivity();
-      if (null == activity) return false;
+      if (null == activity) {
+        return false;
+      }
       final BaseCaptureInterface captureInterface = (BaseCaptureInterface) activity;
 
       setCameraDisplayOrientation(mCamera.getParameters());
@@ -347,10 +393,11 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
       boolean canUseAudio = true;
       boolean audioEnabled = !mInterface.audioDisabled();
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         canUseAudio =
             ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED;
+      }
 
       if (canUseAudio && audioEnabled) {
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
@@ -387,7 +434,7 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
               public void onInfo(MediaRecorder mediaRecorder, int what, int extra) {
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED) {
                   Toast.makeText(
-                          getActivity(), R.string.mcam_file_size_limit_reached, Toast.LENGTH_SHORT)
+                      getActivity(), R.string.mcam_file_size_limit_reached, Toast.LENGTH_SHORT)
                       .show();
                   stopRecordingVideo(false);
                 }
@@ -425,7 +472,9 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       try {
         // UI
         setImageRes(mButtonVideo, mInterface.iconStop());
-        if (!CameraUtil.isChromium()) mButtonFacing.setVisibility(View.GONE);
+        if (!CameraUtil.isChromium()) {
+          mButtonFacing.setVisibility(View.GONE);
+        }
 
         // Only start counter if count down wasn't already started
         if (!mInterface.hasLengthLimit()) {
@@ -485,16 +534,23 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       return;
     }
 
-    if (mCamera != null) mCamera.lock();
+    if (mCamera != null) {
+      mCamera.lock();
+    }
     releaseRecorder();
     closeCamera();
 
-    if (!mInterface.didRecord()) mOutputUri = null;
+    if (!mInterface.didRecord()) {
+      mOutputUri = null;
+    }
 
     setImageRes(mButtonVideo, mInterface.iconRecord());
-    if (!CameraUtil.isChromium()) mButtonFacing.setVisibility(View.VISIBLE);
-    if (mInterface.getRecordingStart() > -1 && getActivity() != null)
+    if (!CameraUtil.isChromium()) {
+      mButtonFacing.setVisibility(View.VISIBLE);
+    }
+    if (mInterface.getRecordingStart() > -1 && getActivity() != null) {
       mInterface.onShowPreview(mOutputUri, reachedZero);
+    }
 
     stopCounter();
   }
