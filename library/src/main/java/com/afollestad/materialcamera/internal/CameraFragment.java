@@ -22,7 +22,6 @@ import com.afollestad.materialcamera.R;
 import com.afollestad.materialcamera.util.CameraUtil;
 import com.afollestad.materialcamera.util.Degrees;
 import com.afollestad.materialcamera.util.ImageUtil;
-import com.afollestad.materialcamera.util.ManufacturerUtil;
 
 import java.io.File;
 import java.util.Collections;
