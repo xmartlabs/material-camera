@@ -57,60 +57,6 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
     return fragment;
   }
 
-  private static Camera.Size chooseVideoSize(BaseCaptureInterface ci, List<Camera.Size> choices) {
-    Camera.Size backupSize = null;
-    for (Camera.Size size : choices) {
-      if (size.height <= ci.videoPreferredHeight()) {
-        if (size.width == size.height * ci.videoPreferredAspect()) {
-          return size;
-        }
-        if (ci.videoPreferredHeight() >= size.height) {
-          backupSize = size;
-        }
-      }
-    }
-    if (backupSize != null) {
-      return backupSize;
-    }
-    LOG(CameraFragment.class, "Couldn't find any suitable video size");
-    return choices.get(choices.size() - 1);
-  }
-
-  private static Camera.Size chooseOptimalSize(List<Camera.Size> choices, int width, int height) {
-    final double ASPECT_TOLERANCE = 0.1;
-    double targetRatio = (double) width / height;
-    if (choices == null) {
-      return null;
-    }
-
-    Camera.Size optimalSize = null;
-    double minDiff = Double.MAX_VALUE;
-
-    // Try to find a size that matches aspect ratio and size
-    for (Camera.Size size : choices) {
-      double ratio = (double) size.width / size.height;
-      if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
-        continue;
-      }
-      if (Math.abs(size.height - height) < minDiff) {
-        optimalSize = size;
-        minDiff = Math.abs(size.height - height);
-      }
-    }
-
-    // Cannot find the one match the aspect ratio, ignore the requirement
-    if (optimalSize == null) {
-      minDiff = Double.MAX_VALUE;
-      for (Camera.Size size : choices) {
-        if (Math.abs(size.height - height) < minDiff) {
-          optimalSize = size;
-          minDiff = Math.abs(size.height - height);
-        }
-      }
-    }
-    return optimalSize;
-  }
-
   @Override
   public void onViewCreated(final View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
@@ -171,6 +117,7 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
   @Override
   public void openCamera() {
+    super.openCamera();
     final Activity activity = getActivity();
     if (null == activity || activity.isFinishing()) {
       return;
@@ -250,27 +197,6 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       final int toOpen = getCurrentCameraId();
       mCamera = Camera.open(toOpen == -1 ? 0 : toOpen);
       Camera.Parameters parameters = mCamera.getParameters();
-      List<Camera.Size> videoSizes = parameters.getSupportedVideoSizes();
-      if (videoSizes == null || videoSizes.size() == 0) {
-        videoSizes = parameters.getSupportedPreviewSizes();
-      }
-
-      mVideoSize = chooseVideoSize((BaseCaptureActivity) activity, videoSizes);
-      Camera.Size previewSize = chooseOptimalSize(parameters.getSupportedPreviewSizes(), mWindowSize.x, mWindowSize.y);
-
-      if (ManufacturerUtil.isSamsungGalaxyS3()) {
-        parameters.setPreviewSize(
-            ManufacturerUtil.SAMSUNG_S3_PREVIEW_WIDTH, ManufacturerUtil.SAMSUNG_S3_PREVIEW_HEIGHT);
-      } else {
-        parameters.setPreviewSize(previewSize.width, previewSize.height);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-          parameters.setRecordingHint(true);
-        }
-      }
-
-      Camera.Size mStillShotSize =
-          getHighestSupportedStillShotSize(parameters.getSupportedPictureSizes());
-      parameters.setPictureSize(mStillShotSize.width, mStillShotSize.height);
 
       setCameraDisplayOrientation(parameters);
       mCamera.setParameters(parameters);
@@ -345,20 +271,25 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
   }
 
   private void createPreview() {
-    Activity activity = getActivity();
-    if (activity == null) {
-      return;
-    }
-    if (mWindowSize == null) {
-      mWindowSize = new Point();
-    }
-    activity.getWindowManager().getDefaultDisplay().getSize(mWindowSize);
+    // If the rotation is 90 or 270, flip the aspect ratio values
+    int rotation = Integer.parseInt(mCamera.getParameters().get("rotation"));
     mPreviewView = new CameraPreview(getActivity(), mCamera);
+
     if (mPreviewFrame.getChildCount() > 0 && mPreviewFrame.getChildAt(0) instanceof CameraPreview) {
       mPreviewFrame.removeViewAt(0);
     }
-    mPreviewFrame.addView(mPreviewView, 0);
-    mPreviewView.setAspectRatio(mWindowSize.x, mWindowSize.y);
+
+    // Find the camera's preview size and current rotation
+    Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
+    RelativeLayout.LayoutParams params=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+        RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+    if (rotation == Degrees.DEGREES_90 || rotation == Degrees.DEGREES_270) {
+      params.addRule(RelativeLayout.ABOVE, R.id.controlsFrame);
+    } else {
+      params.addRule(RelativeLayout.LEFT_OF, R.id.controlsFrame);
+    }
+    mPreviewFrame.addView(mPreviewView, 0, params);
   }
 
   @Override
@@ -410,7 +341,7 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
           CamcorderProfile.get(getCurrentCameraId(), mInterface.qualityProfile());
       mMediaRecorder.setOutputFormat(profile.fileFormat);
       mMediaRecorder.setVideoFrameRate(mInterface.videoFrameRate(profile.videoFrameRate));
-      mMediaRecorder.setVideoSize(mVideoSize.width, mVideoSize.height);
+      mMediaRecorder.setVideoSize(mPreviewView.getmPreviewSize().width, mPreviewView.getmPreviewSize().height);
       mMediaRecorder.setVideoEncodingBitRate(mInterface.videoEncodingBitRate(profile.videoBitRate));
       mMediaRecorder.setVideoEncoder(profile.videoCodec);
 
@@ -463,6 +394,12 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       throwError(new Exception("Failed to begin recording: " + t.getMessage(), t));
       return false;
     }
+  }
+
+  @Override
+  protected void reset() {
+    cleanup();
+    openCamera();
   }
 
   @Override

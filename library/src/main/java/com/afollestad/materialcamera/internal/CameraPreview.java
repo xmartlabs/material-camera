@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.Collection;
+
 @SuppressWarnings("deprecation")
 @SuppressLint("ViewConstructor")
 class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
@@ -15,6 +17,12 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
   protected final SurfaceHolder mHolder;
   private final Camera mCamera;
+  private final Collection<Camera.Size> mSupportedPreviewSizes;
+  private Camera.Size mPreviewSize;
+
+  public Camera.Size getmPreviewSize() {
+    return mPreviewSize;
+  }
 
   public CameraPreview(Context context, Camera camera) {
     super(context);
@@ -22,6 +30,7 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     mHolder = getHolder();
     mHolder.addCallback(this);
     mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
   }
 
   @Override
@@ -41,31 +50,64 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
   @Override
   public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-    if (mHolder.getSurface() == null) return;
+    if (mHolder.getSurface() == null) {
+      return;
+    }
     try {
       mCamera.stopPreview();
     } catch (Exception ignored) {
     }
     try {
-      mCamera.setPreviewDisplay(mHolder);
+      Camera.Parameters parameters = mCamera.getParameters();
+      parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+      mCamera.setParameters(parameters);
       mCamera.startPreview();
     } catch (Exception e) {
       Log.d(TAG, "Error starting camera preview: " + e.getMessage());
     }
   }
 
-  /**
-   * Sets the aspect ratio for this view. The size of the view will be measured based on the ratio
-   * calculated from the parameters. Note that the actual sizes of parameters don't matter, that is,
-   * calling setAspectRatio(2, 3) and setAspectRatio(4, 6) make the same result.
-   *
-   * @param width Relative horizontal size
-   * @param height Relative vertical size
-   */
-  public void setAspectRatio(int width, int height) {
-    if (width < 0 || height < 0) {
-      throw new IllegalArgumentException("Size cannot be negative.");
+  @Override
+  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    final int width = MeasureSpec.getSize(widthMeasureSpec);
+    final int height = MeasureSpec.getSize(heightMeasureSpec);
+    setMeasuredDimension(width, height);
+    if (mSupportedPreviewSizes != null) {
+      mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
     }
-    requestLayout();
+  }
+
+  private Camera.Size getOptimalPreviewSize(Collection<Camera.Size> sizes, int width, int height) {
+    final double ASPECT_TOLERANCE = 0.1;
+    double targetRatio = (double) height / width;
+
+    if (sizes == null) {
+      return null;
+    }
+
+    Camera.Size optimalSize = null;
+    double minDiff = Double.MAX_VALUE;
+
+    for (Camera.Size size : sizes) {
+      double ratio = (double) size.width / size.height;
+      if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+        continue;
+      }
+      if (Math.abs(size.height - height) < minDiff) {
+        optimalSize = size;
+        minDiff = Math.abs(size.height - height);
+      }
+    }
+
+    if (optimalSize == null) {
+      minDiff = Double.MAX_VALUE;
+      for (Camera.Size size : sizes) {
+        if (Math.abs(size.height - height) < minDiff) {
+          optimalSize = size;
+          minDiff = Math.abs(size.height - height);
+        }
+      }
+    }
+    return optimalSize;
   }
 }

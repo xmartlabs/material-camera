@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.hardware.SensorManager;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +14,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -37,15 +40,15 @@ import static com.afollestad.materialcamera.internal.BaseCaptureActivity.FLASH_M
 import static com.afollestad.materialcamera.internal.BaseCaptureActivity.FLASH_MODE_OFF;
 
 /** @author Aidan Follestad (afollestad) */
-abstract class BaseCameraFragment extends Fragment
-    implements CameraUriInterface, View.OnClickListener {
-
-  protected ImageButton mButtonVideo;
-  protected ImageButton mButtonStillshot;
+abstract class BaseCameraFragment extends Fragment implements CameraUriInterface, View.OnClickListener {
+  private int mLastRotation;
   protected ImageButton mButtonFacing;
   protected ImageButton mButtonFlash;
-  protected TextView mRecordDuration;
+  protected ImageButton mButtonStillshot;
+  protected ImageButton mButtonVideo;
+  protected OrientationEventListener mOrientationEventListener;
   protected TextView mDelayStartCountdown;
+  protected TextView mRecordDuration;
 
   private boolean mIsRecording;
   protected String mOutputUri;
@@ -66,10 +69,14 @@ abstract class BaseCameraFragment extends Fragment
       new Runnable() {
         @Override
         public void run() {
-          if (mInterface == null || mRecordDuration == null) return;
+          if (mInterface == null || mRecordDuration == null) {
+            return;
+          }
           final long mRecordStart = mInterface.getRecordingStart();
           final long mRecordEnd = mInterface.getRecordingEnd();
-          if (mRecordStart == -1 && mRecordEnd == -1) return;
+          if (mRecordStart == -1 && mRecordEnd == -1) {
+            return;
+          }
           final long now = System.currentTimeMillis();
           if (mRecordEnd != -1) {
             if (now >= mRecordEnd) {
@@ -82,15 +89,36 @@ abstract class BaseCameraFragment extends Fragment
           } else {
             mRecordDuration.setText(CameraUtil.getDurationString(now - mRecordStart));
           }
-          if (mPositionHandler != null) mPositionHandler.postDelayed(this, 1000);
+          if (mPositionHandler != null) {
+            mPositionHandler.postDelayed(this, 1000);
+          }
         }
       };
 
   @Override
-  public final View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+  public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    if (mOrientationEventListener == null) {
+      mOrientationEventListener = new OrientationEventListener(getActivity(), SensorManager.SENSOR_DELAY_UI) {
+        @Override
+        public void onOrientationChanged(int angle) {
+          // Check if current rotation is landscape but different than before
+          int rotation = getActivity().getWindowManager().getDefaultDisplay().getRotation();
+          if ((rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) && rotation != mLastRotation
+              && (mLastRotation == Surface.ROTATION_270 || mLastRotation == Surface.ROTATION_90)) {
+            if (!mIsRecording) {
+              Log.d("OrientationEvent", "angle changed" + rotation);
+              // Reset camera
+              mLastRotation = rotation;
+              reset();
+            }
+          }
+        }
+      };
+    }
     return inflater.inflate(R.layout.mcam_fragment_videocapture, container, false);
   }
+
+  protected abstract void reset();
 
   protected void setImageRes(ImageView iv, @DrawableRes int res) {
     iv.setImageDrawable(ContextCompat.getDrawable(getActivity(), res));
@@ -139,7 +167,9 @@ abstract class BaseCameraFragment extends Fragment
       mInterface.setDidRecord(false);
     }
 
-    if (savedInstanceState != null) mOutputUri = savedInstanceState.getString("output_uri");
+    if (savedInstanceState != null) {
+      mOutputUri = savedInstanceState.getString("output_uri");
+    }
 
     if (mInterface.useStillshot()) {
       mButtonVideo.setVisibility(View.GONE);
@@ -196,7 +226,9 @@ abstract class BaseCameraFragment extends Fragment
           new Runnable() {
             @Override
             public void run() {
-              if (!isAdded() || getActivity() == null || mIsRecording) return;
+              if (!isAdded() || getActivity() == null || mIsRecording) {
+                return;
+              }
               mButtonVideo.setEnabled(true);
               mIsRecording = startRecordingVideo();
               mDelayHandler = null;
@@ -213,7 +245,9 @@ abstract class BaseCameraFragment extends Fragment
           @SuppressLint("SetTextI18n")
           @Override
           public void run() {
-            if (!isAdded() || getActivity() == null || mIsRecording) return;
+            if (!isAdded() || getActivity() == null || mIsRecording) {
+              return;
+            }
             mDelayCurrentSecond -= 1;
             mDelayStartCountdown.setText(Integer.toString(mDelayCurrentSecond));
 
@@ -246,8 +280,9 @@ abstract class BaseCameraFragment extends Fragment
     super.onResume();
     if (mInterface != null && mInterface.hasLengthLimit()) {
       if (mInterface.countdownImmediately() || mInterface.getRecordingStart() > -1) {
-        if (mInterface.getRecordingStart() == -1)
+        if (mInterface.getRecordingStart() == -1) {
           mInterface.setRecordingStart(System.currentTimeMillis());
+        }
         startCounter();
       }
     }
@@ -272,7 +307,10 @@ abstract class BaseCameraFragment extends Fragment
         getActivity(), getArguments().getString(CameraIntentKey.SAVE_DIR), "IMG_", ".jpg");
   }
 
-  public abstract void openCamera();
+  public void openCamera() {
+    mOrientationEventListener.enable();
+    mLastRotation = getActivity().getWindowManager().getDefaultDisplay().getRotation();
+  }
 
   public abstract void closeCamera();
 
@@ -280,6 +318,7 @@ abstract class BaseCameraFragment extends Fragment
     closeCamera();
     releaseRecorder();
     stopCounter();
+    mOrientationEventListener.disable();
   }
 
   public abstract void takeStillshot();
@@ -299,21 +338,28 @@ abstract class BaseCameraFragment extends Fragment
   }
 
   public final void startCounter() {
-    if (mPositionHandler == null) mPositionHandler = new Handler();
-    else mPositionHandler.removeCallbacks(mPositionUpdater);
+    if (mPositionHandler == null) {
+      mPositionHandler = new Handler();
+    } else {
+      mPositionHandler.removeCallbacks(mPositionUpdater);
+    }
     mPositionHandler.post(mPositionUpdater);
   }
 
   @BaseCaptureActivity.CameraPosition
   public final int getCurrentCameraPosition() {
-    if (mInterface == null) return BaseCaptureActivity.CAMERA_POSITION_UNKNOWN;
+    if (mInterface == null) {
+      return BaseCaptureActivity.CAMERA_POSITION_UNKNOWN;
+    }
     return mInterface.getCurrentCameraPosition();
   }
 
   public final int getCurrentCameraId() {
-    if (mInterface.getCurrentCameraPosition() == BaseCaptureActivity.CAMERA_POSITION_BACK)
+    if (mInterface.getCurrentCameraPosition() == BaseCaptureActivity.CAMERA_POSITION_BACK) {
       return (Integer) mInterface.getBackCamera();
-    else return (Integer) mInterface.getFrontCamera();
+    } else {
+      return (Integer) mInterface.getFrontCamera();
+    }
   }
 
   public final void stopCounter() {
@@ -344,8 +390,9 @@ abstract class BaseCameraFragment extends Fragment
   public boolean startRecordingVideo() {
     if (mInterface != null && mInterface.hasLengthLimit() && !mInterface.countdownImmediately()) {
       // Countdown wasn't started in onResume, start it now
-      if (mInterface.getRecordingStart() == -1)
+      if (mInterface.getRecordingStart() == -1) {
         mInterface.setRecordingStart(System.currentTimeMillis());
+      }
       startCounter();
     }
 
@@ -426,7 +473,9 @@ abstract class BaseCameraFragment extends Fragment
   }
 
   private void invalidateFlash(boolean toggle) {
-    if (toggle) mInterface.toggleFlashMode();
+    if (toggle) {
+      mInterface.toggleFlashMode();
+    }
     setupFlashMode();
     onPreferencesUpdated();
   }

@@ -79,8 +79,10 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
   private Size mPreviewSize;
   private Size mVideoSize;
-  @Degrees.DegreeUnits private int mDisplayOrientation;
+  @Degrees.DegreeUnits
+  private int mDisplayOrientation;
   private boolean mAfAvailable;
+  private boolean disableReset;
 
   /** {@link CaptureRequest.Builder} for the camera preview */
   private CaptureRequest.Builder mPreviewBuilder;
@@ -111,7 +113,8 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
         }
 
         @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {}
+        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+        }
       };
 
   private final CameraDevice.StateCallback mStateCallback =
@@ -206,51 +209,46 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
         private void process(CaptureResult result) {
           switch (mState) {
-            case STATE_PREVIEW:
-              {
-                // We have nothing to do when the camera preview is working normally.
-                break;
-              }
-            case STATE_WAITING_LOCK:
-              {
-                Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
-                if (afState == null) {
-                  captureStillPicture();
-                } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState
-                    || CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
-                  // CONTROL_AE_STATE can be null on some devices
-                  Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                  if (aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                    mState = STATE_PICTURE_TAKEN;
-                    captureStillPicture();
-                  } else {
-                    runPrecaptureSequence();
-                  }
-                }
-                break;
-              }
-            case STATE_WAITING_PRECAPTURE:
-              {
+            case STATE_PREVIEW: {
+              // We have nothing to do when the camera preview is working normally.
+              break;
+            }
+            case STATE_WAITING_LOCK: {
+              Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+              if (afState == null) {
+              } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState
+                  || CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                 // CONTROL_AE_STATE can be null on some devices
                 Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                if (aeState == null
-                    || aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE
-                    || aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED
-                    || aeState == CameraMetadata.CONTROL_AE_STATE_CONVERGED) {
-                  mState = STATE_WAITING_NON_PRECAPTURE;
-                }
-                break;
-              }
-            case STATE_WAITING_NON_PRECAPTURE:
-              {
-                // CONTROL_AE_STATE can be null on some devices
-                Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
+                if (aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
                   mState = STATE_PICTURE_TAKEN;
                   captureStillPicture();
+                } else {
+                  runPrecaptureSequence();
                 }
-                break;
               }
+              break;
+            }
+            case STATE_WAITING_PRECAPTURE: {
+              // CONTROL_AE_STATE can be null on some devices
+              Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
+              if (aeState == null
+                  || aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE
+                  || aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED
+                  || aeState == CameraMetadata.CONTROL_AE_STATE_CONVERGED) {
+                mState = STATE_WAITING_NON_PRECAPTURE;
+              }
+              break;
+            }
+            case STATE_WAITING_NON_PRECAPTURE: {
+              // CONTROL_AE_STATE can be null on some devices
+              Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
+              if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
+                mState = STATE_PICTURE_TAKEN;
+                captureStillPicture();
+              }
+              break;
+            }
           }
         }
 
@@ -281,11 +279,17 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
     Size backupSize = null;
     for (Size size : choices) {
       if (size.getHeight() <= ci.videoPreferredHeight()) {
-        if (size.getWidth() == size.getHeight() * ci.videoPreferredAspect()) return size;
-        if (ci.videoPreferredHeight() >= size.getHeight()) backupSize = size;
+        if (size.getWidth() == size.getHeight() * ci.videoPreferredAspect()) {
+          return size;
+        }
+        if (ci.videoPreferredHeight() >= size.getHeight()) {
+          backupSize = size;
+        }
       }
     }
-    if (backupSize != null) return backupSize;
+    if (backupSize != null) {
+      return backupSize;
+    }
     LOG(Camera2Fragment.class, "Couldn't find any suitable video size");
     return choices[choices.length - 1];
   }
@@ -319,12 +323,12 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
    * doesn't exist, choose the largest one that is at most as large as the respective max size, and
    * whose aspect ratio matches with the specified value.
    *
-   * @param choices The list of sizes that the camera supports for the intended output class
-   * @param textureViewWidth The width of the texture view relative to sensor coordinate
+   * @param choices           The list of sizes that the camera supports for the intended output class
+   * @param textureViewWidth  The width of the texture view relative to sensor coordinate
    * @param textureViewHeight The height of the texture view relative to sensor coordinate
-   * @param maxWidth The maximum width that can be chosen
-   * @param maxHeight The maximum height that can be chosen
-   * @param aspectRatio The aspect ratio
+   * @param maxWidth          The maximum width that can be chosen
+   * @param maxHeight         The maximum height that can be chosen
+   * @param aspectRatio       The aspect ratio
    * @return The optimal {@code Size}, or an arbitrary one if none were big enough
    */
   private static Size chooseOptimalSize(
@@ -384,10 +388,9 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   @Override
   public void onResume() {
     super.onResume();
+    disableReset = false;
     startBackgroundThread();
-    if (mTextureView.isAvailable()) {
-      openCamera();
-    } else {
+    if (!mTextureView.isAvailable()) {
       mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
     }
   }
@@ -400,12 +403,18 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
   /** Starts a background thread and its {@link Handler}. */
   private void startBackgroundThread() {
+    if (mBackgroundThread != null) {
+      return;
+    }
     mBackgroundThread = new HandlerThread("CameraBackground");
     mBackgroundThread.start();
     mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
   }
 
   private void stopBackgroundThread() {
+    if (mBackgroundThread == null) {
+      return;
+    }
     stopCounter();
     mBackgroundThread.quitSafely();
     try {
@@ -419,11 +428,18 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
   @Override
   public void openCamera() {
+    super.openCamera();
+    if (!mTextureView.isAvailable()) {
+      return;
+    }
+
     final int width = mTextureView.getWidth();
     final int height = mTextureView.getHeight();
 
     final Activity activity = getActivity();
-    if (null == activity || activity.isFinishing()) return;
+    if (null == activity || activity.isFinishing()) {
+      return;
+    }
 
     final CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
     try {
@@ -434,15 +450,20 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
       if (mInterface.getFrontCamera() == null || mInterface.getBackCamera() == null) {
         for (String cameraId : manager.getCameraIdList()) {
-          if (cameraId == null) continue;
-          if (mInterface.getFrontCamera() != null && mInterface.getBackCamera() != null) break;
+          if (cameraId == null) {
+            continue;
+          }
+          if (mInterface.getFrontCamera() != null && mInterface.getBackCamera() != null) {
+            break;
+          }
           CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
           //noinspection ConstantConditions
           int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-          if (facing == CameraCharacteristics.LENS_FACING_FRONT)
+          if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
             mInterface.setFrontCamera(cameraId);
-          else if (facing == CameraCharacteristics.LENS_FACING_BACK)
+          } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
             mInterface.setBackCamera(cameraId);
+          }
         }
       }
 
@@ -462,9 +483,11 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
               mInterface.setCameraPosition(CAMERA_POSITION_FRONT);
             } else {
               setImageRes(mButtonFacing, mInterface.iconFrontCamera());
-              if (mInterface.getBackCamera() != null)
+              if (mInterface.getBackCamera() != null) {
                 mInterface.setCameraPosition(CAMERA_POSITION_BACK);
-              else mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              } else {
+                mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              }
             }
           } else {
             // Check back facing first
@@ -473,9 +496,11 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
               mInterface.setCameraPosition(CAMERA_POSITION_BACK);
             } else {
               setImageRes(mButtonFacing, mInterface.iconRearCamera());
-              if (mInterface.getFrontCamera() != null)
+              if (mInterface.getFrontCamera() != null) {
                 mInterface.setCameraPosition(CAMERA_POSITION_FRONT);
-              else mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              } else {
+                mInterface.setCameraPosition(CAMERA_POSITION_UNKNOWN);
+              }
             }
           }
           break;
@@ -496,8 +521,7 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
       // coordinate.
       int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
       //noinspection ConstantConditions,ResourceType
-      @Degrees.DegreeUnits
-      final int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+      @Degrees.DegreeUnits final int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 
       @Degrees.DegreeUnits int deviceRotation = Degrees.getDisplayRotation(getActivity());
       mDisplayOrientation =
@@ -652,7 +676,9 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
     try {
       if (mOutputUri != null) {
         final File outputFile = new File(Uri.parse(mOutputUri).getPath());
-        if (outputFile.length() == 0) outputFile.delete();
+        if (outputFile.length() == 0) {
+          outputFile.delete();
+        }
       }
       mCameraOpenCloseLock.acquire();
       if (null != mCameraDevice) {
@@ -688,7 +714,9 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   }
 
   private void startPreview() {
-    if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) return;
+    if (null == mCameraDevice || mTextureView == null || !mTextureView.isAvailable() || null == mPreviewSize) {
+      return;
+    }
     try {
       if (!mInterface.useStillshot()) {
         if (!setUpMediaRecorder()) {
@@ -796,16 +824,21 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
 
   private boolean setUpMediaRecorder() {
     final Activity activity = getActivity();
-    if (null == activity) return false;
+    if (null == activity) {
+      return false;
+    }
     final BaseCaptureInterface captureInterface = (BaseCaptureInterface) activity;
-    if (mMediaRecorder == null) mMediaRecorder = new MediaRecorder();
+    if (mMediaRecorder == null) {
+      mMediaRecorder = new MediaRecorder();
+    }
 
     boolean canUseAudio = true;
     boolean audioEnabled = !mInterface.audioDisabled();
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       canUseAudio =
           ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
               == PackageManager.PERMISSION_GRANTED;
+    }
 
     if (canUseAudio && audioEnabled) {
       mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
@@ -840,7 +873,7 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
             public void onInfo(MediaRecorder mediaRecorder, int what, int extra) {
               if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED) {
                 Toast.makeText(
-                        getActivity(), R.string.mcam_file_size_limit_reached, Toast.LENGTH_SHORT)
+                    getActivity(), R.string.mcam_file_size_limit_reached, Toast.LENGTH_SHORT)
                     .show();
                 stopRecordingVideo(false);
               }
@@ -865,7 +898,9 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
     try {
       // UI
       setImageRes(mButtonVideo, mInterface.iconStop());
-      if (!CameraUtil.isChromium()) mButtonFacing.setVisibility(View.GONE);
+      if (!CameraUtil.isChromium()) {
+        mButtonFacing.setVisibility(View.GONE);
+      }
 
       // Only start counter if count down wasn't already started
       if (!mInterface.hasLengthLimit()) {
@@ -899,7 +934,7 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   @Override
   public void stopRecordingVideo(boolean reachedZero) {
     super.stopRecordingVideo(reachedZero);
-
+    disableReset = true;
     if (mInterface.hasLengthLimit()
         && mInterface.shouldAutoSubmit()
         && (mInterface.getRecordingStart() < 0 || mMediaRecorder == null)) {
@@ -909,13 +944,18 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
       return;
     }
 
-    if (!mInterface.didRecord()) mOutputUri = null;
+    if (!mInterface.didRecord()) {
+      mOutputUri = null;
+    }
 
     releaseRecorder();
     setImageRes(mButtonVideo, mInterface.iconRecord());
-    if (!CameraUtil.isChromium()) mButtonFacing.setVisibility(View.VISIBLE);
-    if (mInterface.getRecordingStart() > -1 && getActivity() != null)
+    if (!CameraUtil.isChromium()) {
+      mButtonFacing.setVisibility(View.VISIBLE);
+    }
+    if (mInterface.getRecordingStart() > -1 && getActivity() != null) {
       mInterface.onShowPreview(mOutputUri, reachedZero);
+    }
 
     stopCounter();
   }
@@ -998,13 +1038,14 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
           manager.getCameraCharacteristics(mCameraDevice.getId());
 
       //noinspection ConstantConditions,ResourceType
-      @Degrees.DegreeUnits
-      final int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+      @Degrees.DegreeUnits final int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
       int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
 
       // default camera orientation used to be 90 degrees, for Nexus 5X, 6P it is 270 degrees
       if (sensorOrientation == Degrees.DEGREES_270) {
-        displayRotation += 2 % 3;
+        if (displayRotation == Surface.ROTATION_0 || displayRotation == Surface.ROTATION_180) {
+          displayRotation = (displayRotation + 2) % 4;
+        }
       }
 
       captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(displayRotation));
@@ -1044,6 +1085,16 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
       mPreviewSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
     } catch (CameraAccessException e) {
       e.printStackTrace();
+    }
+  }
+
+  @Override
+  protected void reset() {
+    stopBackgroundThread();
+    startBackgroundThread();
+    mCameraDevice.close();
+    if (!disableReset) {
+      openCamera();
     }
   }
 
