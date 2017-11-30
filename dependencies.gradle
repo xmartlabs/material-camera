@@ -2,7 +2,7 @@ ext.versions = [
         buildTools        : '26.0.2',
         compileSdk        : 26,
         easyVideoPlayer   : '0.3.0',
-        gradlePlugin      : '2.3.2',
+        gradlePlugin      : '3.0.1',
         materialDialogs   : '0.9.4.3',
         minSdk            : 17,
         publishVersion    : '0.4.4',
