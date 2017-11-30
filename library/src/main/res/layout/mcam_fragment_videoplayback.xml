@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_below="@id/selectorView"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:text="@string/use_video"
             android:textAllCaps="false"
             android:textColor="@color/white"
