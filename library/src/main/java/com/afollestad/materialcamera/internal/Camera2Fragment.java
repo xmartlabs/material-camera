@@ -278,7 +278,7 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   public static Size getSizeWithClosestRatio(Size[] sizes, int targetWidth, int targetHeight) {
     if (sizes == null) return null;
 
-    double MIN_TOLERANCE = 100;
+    double minTolerance = 100;
     double targetRatio = (double) targetHeight / targetWidth;
     Size optimalSize = null;
     double minDiff = Double.MAX_VALUE;
@@ -286,12 +286,12 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
     for (Size size : sizes) {
 
       double ratio = (double) size.getHeight() / size.getWidth();
-
-      if (Math.abs(ratio - targetRatio) < MIN_TOLERANCE) {
-        MIN_TOLERANCE = Math.abs(ratio - targetRatio);
+      if (Math.abs(ratio - targetRatio) < minTolerance) {
+        minTolerance = Math.abs(ratio - targetRatio);
         minDiff = Double.MAX_VALUE;
+      } else {
+        continue;
       }
-      else continue;
 
       if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
         optimalSize = size;
