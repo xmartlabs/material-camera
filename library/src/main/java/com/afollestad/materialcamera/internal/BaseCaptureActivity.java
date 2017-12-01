@@ -20,6 +20,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -456,9 +457,15 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
     return getIntent().getIntExtra(CameraIntentKey.VIDEO_FRAME_RATE, defaultVal);
   }
 
+  private float getScreenRatio() {
+    DisplayMetrics metrics = new DisplayMetrics();
+    getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    return ((float) metrics.widthPixels) / ((float) metrics.heightPixels);
+  }
+
   @Override
   public float videoPreferredAspect() {
-    return getIntent().getFloatExtra(CameraIntentKey.VIDEO_PREFERRED_ASPECT, 4f / 3f);
+    return getIntent().getFloatExtra(CameraIntentKey.VIDEO_PREFERRED_ASPECT, getScreenRatio());
   }
 
   @Override

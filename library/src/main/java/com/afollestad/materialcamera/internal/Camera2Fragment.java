@@ -275,23 +275,48 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
     return fragment;
   }
 
-  private static Size chooseVideoSize(BaseCaptureInterface ci, Size[] choices) {
-    Size backupSize = null;
-    for (Size size : choices) {
-      if (size.getHeight() <= ci.videoPreferredHeight()) {
-        if (size.getWidth() == size.getHeight() * ci.videoPreferredAspect()) {
-          return size;
-        }
-        if (ci.videoPreferredHeight() >= size.getHeight()) {
-          backupSize = size;
+  public static Size getSizeWithClosestRatio(Size[] sizes, int targetWidth, int targetHeight) {
+    if (sizes == null) return null;
+
+    double minTolerance = 100;
+    double targetRatio = (double) targetHeight / targetWidth;
+    Size optimalSize = null;
+    double minDiff = Double.MAX_VALUE;
+
+    for (Size size : sizes) {
+
+      double ratio = (double) size.getHeight() / size.getWidth();
+      if (Math.abs(ratio - targetRatio) < minTolerance) {
+        minTolerance = Math.abs(ratio - targetRatio);
+        minDiff = Double.MAX_VALUE;
+      } else {
+        continue;
+      }
+
+      if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+        optimalSize = size;
+        minDiff = Math.abs(size.getHeight() - targetHeight);
+      }
+    }
+
+    if (optimalSize == null) {
+      minDiff = Double.MAX_VALUE;
+      for (Size size : sizes) {
+        if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+          optimalSize = size;
+          minDiff = Math.abs(size.getHeight() - targetHeight);
         }
       }
     }
-    if (backupSize != null) {
-      return backupSize;
-    }
-    LOG(Camera2Fragment.class, "Couldn't find any suitable video size");
-    return choices[choices.length - 1];
+    return optimalSize;
+  }
+
+  private static Size chooseVideoSize(BaseCaptureInterface ci, Size[] choices) {
+    return getSizeWithClosestRatio(
+        choices,
+        (int) (ci.videoPreferredHeight() / ci.videoPreferredAspect()),
+        ci.videoPreferredHeight()
+    );
   }
 
   private static Size chooseOptimalSize(Size[] choices, int width, int height, Size aspectRatio) {
