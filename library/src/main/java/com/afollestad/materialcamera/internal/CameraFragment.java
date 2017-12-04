@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -13,7 +14,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -22,6 +27,7 @@ import com.afollestad.materialcamera.R;
 import com.afollestad.materialcamera.util.CameraUtil;
 import com.afollestad.materialcamera.util.Degrees;
 import com.afollestad.materialcamera.util.ImageUtil;
+import com.afollestad.materialcamera.util.ManufacturerUtil;
 
 import java.io.File;
 import java.util.Collections;
@@ -39,7 +45,6 @@ import static com.afollestad.materialcamera.internal.BaseCaptureActivity.FLASH_M
 @SuppressWarnings("deprecation")
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 public class CameraFragment extends BaseCameraFragment implements View.OnClickListener {
-
   CameraPreview mPreviewView;
   RelativeLayout mPreviewFrame;
 
@@ -47,6 +52,8 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
   private Camera mCamera;
   private Point mWindowSize;
   private int mDisplayOrientation;
+  private int mLastRotation;
+  protected OrientationEventListener mOrientationEventListener;
   private boolean mIsAutoFocusing;
   List<Integer> mFlashModes;
 
@@ -59,8 +66,64 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
   @Override
   public void onViewCreated(final View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    mPreviewFrame = (RelativeLayout) view.findViewById(R.id.rootFrame);
+    mPreviewFrame = view.findViewById(R.id.rootFrame);
     mPreviewFrame.setOnClickListener(this);
+  }
+
+  private static Camera.Size chooseVideoSize(BaseCaptureInterface ci, List<Camera.Size> choices) {
+    Camera.Size backupSize = null;
+    for (Camera.Size size : choices) {
+      if (size.height <= ci.videoPreferredHeight()) {
+        if (size.width == size.height * ci.videoPreferredAspect()) {
+          return size;
+        }
+        if (ci.videoPreferredHeight() >= size.height) {
+          backupSize = size;
+        }
+      }
+    }
+
+    if (backupSize != null) {
+      return backupSize;
+    }
+
+    LOG(CameraFragment.class, "Couldn't find any suitable video size");
+    return choices.get(choices.size() - 1);
+  }
+
+  private static Camera.Size chooseOptimalSize(List<Camera.Size> choices, int width, int height) {
+    final double ASPECT_TOLERANCE = 0.1;
+    double targetRatio = (double) width / height;
+    if (choices == null) {
+      return null;
+    }
+
+    Camera.Size optimalSize = null;
+    double minDiff = Double.MAX_VALUE;
+
+    // Try to find a size that matches aspect ratio and size
+    for (Camera.Size size : choices) {
+      double ratio = (double) size.width / size.height;
+      if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+        continue;
+      }
+      if (Math.abs(size.height - height) < minDiff) {
+        optimalSize = size;
+        minDiff = Math.abs(size.height - height);
+      }
+    }
+
+    // Cannot find the one match the aspect ratio, ignore the requirement
+    if (optimalSize == null) {
+      minDiff = Double.MAX_VALUE;
+      for (Camera.Size size : choices) {
+        if (Math.abs(size.height - height) < minDiff) {
+          optimalSize = size;
+          minDiff = Math.abs(size.height - height);
+        }
+      }
+    }
+    return optimalSize;
   }
 
   @Override
@@ -116,7 +179,6 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
   @Override
   public void openCamera() {
-    super.openCamera();
     final Activity activity = getActivity();
     if (null == activity || activity.isFinishing()) {
       return;
@@ -196,6 +258,28 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
       final int toOpen = getCurrentCameraId();
       mCamera = Camera.open(toOpen == -1 ? 0 : toOpen);
       Camera.Parameters parameters = mCamera.getParameters();
+
+      List<Camera.Size> videoSizes = parameters.getSupportedVideoSizes();
+      if (videoSizes == null || videoSizes.size() == 0) {
+        videoSizes = parameters.getSupportedPreviewSizes();
+      }
+
+      mVideoSize = chooseVideoSize((BaseCaptureActivity) activity, videoSizes);
+      Camera.Size previewSize = chooseOptimalSize(parameters.getSupportedPreviewSizes(), mWindowSize.x, mWindowSize.y);
+
+      if (ManufacturerUtil.isSamsungGalaxyS3()) {
+        parameters.setPreviewSize(
+            ManufacturerUtil.SAMSUNG_S3_PREVIEW_WIDTH, ManufacturerUtil.SAMSUNG_S3_PREVIEW_HEIGHT);
+      } else {
+        parameters.setPreviewSize(previewSize.width, previewSize.height);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+          parameters.setRecordingHint(true);
+        }
+      }
+
+      Camera.Size mStillShotSize =
+          getHighestSupportedStillShotSize(parameters.getSupportedPictureSizes());
+      parameters.setPictureSize(mStillShotSize.width, mStillShotSize.height);
 
       setCameraDisplayOrientation(parameters);
       mCamera.setParameters(parameters);
@@ -280,7 +364,7 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
 
     // Find the camera's preview size and current rotation
     Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
-    RelativeLayout.LayoutParams params=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
         RelativeLayout.LayoutParams.WRAP_CONTENT);
 
     if (rotation == Degrees.DEGREES_90 || rotation == Degrees.DEGREES_270) {
@@ -340,7 +424,7 @@ public class CameraFragment extends BaseCameraFragment implements View.OnClickLi
           CamcorderProfile.get(getCurrentCameraId(), mInterface.qualityProfile());
       mMediaRecorder.setOutputFormat(profile.fileFormat);
       mMediaRecorder.setVideoFrameRate(mInterface.videoFrameRate(profile.videoFrameRate));
-      mMediaRecorder.setVideoSize(mPreviewView.getmPreviewSize().width, mPreviewView.getmPreviewSize().height);
+      mMediaRecorder.setVideoSize(mVideoSize.width, mVideoSize.height);
       mMediaRecorder.setVideoEncodingBitRate(mInterface.videoEncodingBitRate(profile.videoBitRate));
       mMediaRecorder.setVideoEncoder(profile.videoCodec);
 

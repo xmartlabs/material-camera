@@ -96,7 +96,7 @@ abstract class BaseCameraFragment extends Fragment implements CameraUriInterface
       };
 
   @Override
-  public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (mOrientationEventListener == null) {
       mOrientationEventListener = new OrientationEventListener(getActivity(), SensorManager.SENSOR_DELAY_UI) {
         @Override

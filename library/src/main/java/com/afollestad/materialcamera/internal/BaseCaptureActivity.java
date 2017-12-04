@@ -457,7 +457,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
     return getIntent().getIntExtra(CameraIntentKey.VIDEO_FRAME_RATE, defaultVal);
   }
 
-  private float getScreenRatio() {
+  public float getScreenRatio() {
     DisplayMetrics metrics = new DisplayMetrics();
     getWindowManager().getDefaultDisplay().getMetrics(metrics);
     return ((float) metrics.heightPixels) / ((float) metrics.widthPixels);
