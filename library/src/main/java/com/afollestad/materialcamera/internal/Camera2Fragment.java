@@ -312,10 +312,12 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   }
 
   private static Size chooseVideoSize(BaseCaptureInterface ci, Size[] choices) {
+    // Pass the width and height the other way around because the choices seem to be in landscape
+    // but the device dimensions are in portrait.
     return getSizeWithClosestRatio(
         choices,
-        (int) (ci.videoPreferredHeight() / ci.videoPreferredAspect()),
-        ci.videoPreferredHeight()
+        ci.videoPreferredHeight(),
+        (int) (ci.videoPreferredHeight() / ci.videoPreferredAspect())
     );
   }
 

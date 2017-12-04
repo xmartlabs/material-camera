@@ -460,7 +460,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
   private float getScreenRatio() {
     DisplayMetrics metrics = new DisplayMetrics();
     getWindowManager().getDefaultDisplay().getMetrics(metrics);
-    return ((float) metrics.widthPixels) / ((float) metrics.heightPixels);
+    return ((float) metrics.heightPixels) / ((float) metrics.widthPixels);
   }
 
   @Override
@@ -468,9 +468,15 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
     return getIntent().getFloatExtra(CameraIntentKey.VIDEO_PREFERRED_ASPECT, getScreenRatio());
   }
 
+  private int getScreenHeight() {
+    DisplayMetrics metrics = new DisplayMetrics();
+    getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    return metrics.heightPixels;
+  }
+
   @Override
   public int videoPreferredHeight() {
-    return getIntent().getIntExtra(CameraIntentKey.VIDEO_PREFERRED_HEIGHT, 720);
+    return getIntent().getIntExtra(CameraIntentKey.VIDEO_PREFERRED_HEIGHT, getScreenHeight());
   }
 
   @Override
