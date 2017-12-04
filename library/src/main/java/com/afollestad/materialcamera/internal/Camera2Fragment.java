@@ -70,6 +70,7 @@ import static com.afollestad.materialcamera.internal.BaseCaptureActivity.FLASH_M
 /** @author Aidan Follestad (afollestad) */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class Camera2Fragment extends BaseCameraFragment implements View.OnClickListener {
+  public static final int FULL_HD_HEIGHT = 1920;
 
   private CameraDevice mCameraDevice;
   private CameraCaptureSession mPreviewSession;
@@ -276,26 +277,28 @@ public class Camera2Fragment extends BaseCameraFragment implements View.OnClickL
   }
 
   public static Size getSizeWithClosestRatio(Size[] sizes, int targetWidth, int targetHeight) {
-    if (sizes == null) return null;
+    if (sizes == null) {
+      return null;
+    }
 
     double minTolerance = 100;
     double targetRatio = (double) targetHeight / targetWidth;
     Size optimalSize = null;
-    double minDiff = Double.MAX_VALUE;
+    double minDiff;
 
     for (Size size : sizes) {
+      if (size.getHeight() <= FULL_HD_HEIGHT && size.getWidth() <= FULL_HD_HEIGHT) {
+        double ratio = (double) size.getHeight() / size.getWidth();
+        if (Math.abs(ratio - targetRatio) < minTolerance) {
+          minTolerance = Math.abs(ratio - targetRatio);
+          minDiff = Double.MAX_VALUE;
+        } else {
+          continue;
+        }
 
-      double ratio = (double) size.getHeight() / size.getWidth();
-      if (Math.abs(ratio - targetRatio) < minTolerance) {
-        minTolerance = Math.abs(ratio - targetRatio);
-        minDiff = Double.MAX_VALUE;
-      } else {
-        continue;
-      }
-
-      if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
-        optimalSize = size;
-        minDiff = Math.abs(size.getHeight() - targetHeight);
+        if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+          optimalSize = size;
+        }
       }
     }
 
