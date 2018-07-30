@@ -8,5 +8,5 @@ import android.support.annotation.Nullable;
 public interface BasePlaybackInterface {
   long getRecordingEnd();
   void onRetry(@Nullable String outputUri);
-  void useMedia(String uri);
+  void useMediaWithSelectedThumbnail(String uri, int thumbnailPositionInMillis);
 }
