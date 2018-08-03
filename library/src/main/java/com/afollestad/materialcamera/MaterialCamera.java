@@ -40,6 +40,7 @@ public class MaterialCamera {
 
   public static final String ERROR_EXTRA = "mcam_error";
   public static final String STATUS_EXTRA = "mcam_status";
+  public static final String THUMBNAIL_EXTRA = "mcam_thumbnail";
 
   public static final int STATUS_RECORDED = 1;
   public static final int STATUS_RETRY = 2;

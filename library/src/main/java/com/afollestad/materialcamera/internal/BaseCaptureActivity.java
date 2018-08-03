@@ -399,6 +399,19 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
   }
 
   @Override
+  public final void useMediaWithSelectedThumbnail(@Nullable String uri, @Nullable Integer thumbnailPositionInMillis) {
+    if (uri != null) {
+      setResult(
+          Activity.RESULT_OK,
+          getIntent()
+              .putExtra(MaterialCamera.THUMBNAIL_EXTRA, thumbnailPositionInMillis)
+              .putExtra(MaterialCamera.STATUS_EXTRA, MaterialCamera.STATUS_RECORDED)
+              .setDataAndType(Uri.parse(uri), useStillshot() ? "image/jpeg" : "video/mp4"));
+    }
+    finish();
+  }
+
+  @Override
   public final void useMedia(String uri) {
     if (uri != null) {
       setResult(
