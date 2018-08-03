@@ -399,7 +399,7 @@ public abstract class BaseCaptureActivity extends AppCompatActivity
   }
 
   @Override
-  public final void useMediaWithSelectedThumbnail(String uri, int thumbnailPositionInMillis) {
+  public final void useMediaWithSelectedThumbnail(@Nullable String uri, @Nullable Integer thumbnailPositionInMillis) {
     if (uri != null) {
       setResult(
           Activity.RESULT_OK,
