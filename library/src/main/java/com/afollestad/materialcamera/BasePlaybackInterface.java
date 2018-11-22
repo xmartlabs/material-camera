@@ -1,6 +1,5 @@
 package com.afollestad.materialcamera;
 
-import android.net.Uri;
 import android.support.annotation.Nullable;
 
 /**
@@ -9,5 +8,5 @@ import android.support.annotation.Nullable;
 public interface BasePlaybackInterface {
   long getRecordingEnd();
   void onRetry(@Nullable String outputUri);
-  void useMediaWithSelectedThumbnail(@Nullable String uri, @Nullable Uri thumbnailPositionInMillis);
+  void useMediaWithSelectedThumbnail(@Nullable String uri, @Nullable String thumbnailPositionInMillis);
 }

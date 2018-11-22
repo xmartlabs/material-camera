@@ -106,7 +106,7 @@ public class PlaybackVideoFragment extends Fragment
   @Override
   public void getResult(Uri uri) {
     mProgressDialog.cancel();
-    mInterface.useMediaWithSelectedThumbnail(uri.getPath(), mVideoTrimmer.getBitmapUri());
+    mInterface.useMediaWithSelectedThumbnail(uri.getPath(), mVideoTrimmer.getBitmapString());
   }
 
   @Override
