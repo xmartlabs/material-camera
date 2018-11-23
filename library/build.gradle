@@ -13,6 +13,7 @@ android {
 
     defaultConfig {
         minSdkVersion versions.minSdk
+        multiDexEnabled true
         targetSdkVersion versions.compileSdk
         versionCode versions.publishVersionCode
         versionName versions.publishVersion
